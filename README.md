@@ -40,8 +40,8 @@ Full syntax is:
 Pre-requisites
 --------------
 You'll need to install a few modules, including:
-* dateformat
-* aws2js
+* aws-sdk
+* commander
 	
 	npm install aws-sdk commander
 
