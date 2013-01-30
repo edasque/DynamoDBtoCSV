@@ -1,7 +1,7 @@
 AWS DynamoDBtoCSV
 ==================
 
-This application will export the content of a DynamoDB table into CSV. All you need to do is create a *config.json* file in that same directory where you configure your *accessKeyId*, *secretAccessKey* and *region* as such:
+This application will export the content of a DynamoDB table into a CSV (Comma delimited value) output. All you need to do is create a *config.json* file in that same directory where you configure your *accessKeyId*, *secretAccessKey* and *region* as such:
 
 	{
 	    "accessKeyId": "REPLACE",
@@ -9,16 +9,18 @@ This application will export the content of a DynamoDB table into CSV. All you n
 	    "region": "REPLACE"
 	}
 
+The output is comma separated and each field is enclosed by double quotes ("). Double quotes in the data as escaped as \"
+
 Usage
 -------------------
 
-typically, to test you'd run:
+typically, to use you'd run:
 
-	node dynamoDBtoCSV.js -t Hourly_ZEDO_Impressions_by_IP
+	node dynamoDBtoCSV.js -t Hourly_ZEDO_Impressions_by_IP > output.csv
 
 to export to CSV
 
-and
+Use *-d* to describe the table prior so you can have an idea of the number of rows you are going to export
 
 	node dynamoDBtoCSV.js -t Hourly_ZEDO_Impressions_by_IP -d
 
