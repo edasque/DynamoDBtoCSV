@@ -15,7 +15,6 @@ if(!program.table) {
 
 var query = {
 	"TableName": program.table,
-	"Limit": 1000,
 };
 
 
