@@ -1,7 +1,7 @@
 var program = require('commander');
 var AWS = require('aws-sdk');
 AWS.config.loadFromPath('./config.json');
-var dynamoDB = new AWS.DynamoDB.Client();
+var dynamoDB = new AWS.DynamoDB();
 
 var iKnowTheHeaders = false;
 

@@ -1,0 +1,15 @@
+{
+  "name": "DynamoDBtoCSV",
+  "description": "Dump Dynamo into CSV format",
+  "version": "0.0.1",
+  "private": true,
+  "homepage": "https://github.com/edasque/DynamoDBtoCSV",
+  "repository": "git://github.com/edasque/DynamoDBtoCSV",
+  "engines": {
+    "node": ">=0.8.x"
+  },
+  "dependencies": {
+    "aws-sdk": ">=2.0.0-rc13",
+    "commander": ">=2.2.0"
+  }
+}
