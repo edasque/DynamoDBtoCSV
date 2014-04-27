@@ -45,7 +45,7 @@ You'll need to install a few modules, including:
 * aws-sdk
 * commander
 	
-	npm install aws-sdk commander
+	npm install
 
 should do it. 
 
