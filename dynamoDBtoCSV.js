@@ -21,7 +21,7 @@ var query = {
 
 var describeTable = function(query) {
 
-		dynamoDB.describeTable(query, function(err, data) {
+    dynamoDB.describeTable({"TableName": program.table}, function(err, data) {
 
 			if(!err) {
 
