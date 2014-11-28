@@ -76,10 +76,20 @@ function printout(items) {
 		for(var propertyName in items[index])
 
 		{
-			var value = (items[index][propertyName].N) ? items[index][propertyName].N : String(items[index][propertyName].S);
+            if (items[index][propertyName].N) {
+                var value = items[index][propertyName].N;
+            }
+            else if (items[index][propertyName].S) {
+                var value = items[index][propertyName].S;
+            }
+            else if (items[index][propertyName].SS) {
+                var value = items[index][propertyName].SS.toString();
+            }
+            else {
+                var value = "";
+            }
+
 			values.push(value)
-
-
 		}
 		console.log(arrayToCSV(values))
 
