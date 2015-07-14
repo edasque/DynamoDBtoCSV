@@ -52,7 +52,7 @@ var scanDynamoDB = function(query) {
 function arrayToCSV(array_input) {
     var string_output = "";
     for (var i = 0; i < array_input.length; i++) {
-        string_output += ('"' + array_input[i].replace('"', '\"') + '"')
+        string_output += ('"' + array_input[i].replace(/\"/g, '\\"') + '"')
         if (i != array_input.length - 1) string_output += ","
     };
     return string_output;
