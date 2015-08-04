@@ -13,6 +13,8 @@ This application will export the content of a DynamoDB table into a CSV (Comma d
 
 The output is comma separated and each field is enclosed by double quotes ("). Double quotes in the data as escaped as \"
 
+This software is governed by the Apache 2.0 license.
+
 Usage
 -------------------
 
