@@ -94,6 +94,8 @@ function printout(items) {
                     value = items[index][header].SS.toString();
                 } else if (items[index][header].B) {
                     value = items[index][header].B.toString('base64');
+                } else if (items[index][header].M) {
+                    value = JSON.stringify(items[index][header].M);
                 }
             }
             values.push(value)
