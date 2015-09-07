@@ -98,6 +98,8 @@ function printout(items) {
                     value = JSON.stringify(items[index][header].M);
                 } else if (items[index][header].L) {
                     value = JSON.stringify(items[index][header].L);
+                } else if (items[index][header].BOOL) {
+                    value = items[index][header].BOOL.toString();
                 }
             }
             values.push(value)
