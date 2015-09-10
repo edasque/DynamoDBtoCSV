@@ -92,6 +92,8 @@ function printout(items) {
                     value = items[index][header].S;
                 } else if (items[index][header].SS) {
                     value = items[index][header].SS.toString();
+                } else if (items[index][header].NS) {
+                    value = items[index][header].NS.toString();
                 } else if (items[index][header].B) {
                     value = items[index][header].B.toString('base64');
                 } else if (items[index][header].M) {
