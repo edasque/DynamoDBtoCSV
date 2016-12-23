@@ -3,15 +3,9 @@ AWS DynamoDBtoCSV
 
 [![Join the chat at https://gitter.im/edasque/DynamoDBtoCSV](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/edasque/DynamoDBtoCSV?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
 
-This application will export the content of a DynamoDB table into a CSV (Comma delimited value) output. All you need to do is create a *config.json* file in that same directory where you configure your *accessKeyId*, *secretAccessKey* and *region* as such:
+This application will export the content of a DynamoDB table into CSV (comma-separated values) output. All you need to do is update `config.json` with your AWS credentials and region.
 
-	{
-	    "accessKeyId": "REPLACE",
-	    "secretAccessKey": "REPLACE",
-	    "region": "REPLACE"
-	}
-
-The output is comma separated and each field is enclosed by double quotes ("). Double quotes in the data as escaped as \"
+The output is comma-separated and each field is enclosed by double quotes ("). Double quotes in the data as escaped as \"
 
 This software is governed by the Apache 2.0 license.
 
@@ -48,10 +42,10 @@ Pre-requisites
 You'll need to install a few modules, including:
 * aws-sdk
 * commander
-	
+
 	npm install
 
-should do it. 
+should do it.
 
 Example output
 --------------
