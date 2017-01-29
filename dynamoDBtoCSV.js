@@ -1,6 +1,8 @@
 var program = require('commander');
 var AWS = require('aws-sdk');
-AWS.config.loadFromPath('./config.json');
+if (!AWS.config.credentials) {
+    AWS.config.loadFromPath('./config.json');
+}
 var dynamoDB = new AWS.DynamoDB();
 var headers = [];
 
