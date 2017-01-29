@@ -1,16 +1,21 @@
 var program = require('commander');
 var AWS = require('aws-sdk');
-AWS.config.loadFromPath('./config.json');
-var dynamoDB = new AWS.DynamoDB();
 var headers = [];
 
-program.version('0.0.1').option('-t, --table [tablename]', 'Add the table you want to output to csv').option("-d, --describe").parse(process.argv);
+program.version('0.0.1').option('-t, --table [tablename]', 'Add the table you want to output to csv').option("-d, --describe").option("-r, --region [regionname]").parse(process.argv);
 
 if (!program.table) {
     console.log("You must specify a table");
     program.outputHelp();
     process.exit(1);
 }
+
+if (program.region && AWS.config.credentials) {
+    AWS.config.update({region: program.region});
+} else {
+    AWS.config.loadFromPath('./config.json');
+}
+var dynamoDB = new AWS.DynamoDB();
 
 var query = {
     "TableName": program.table,
