@@ -6,13 +6,28 @@ var Papa = require('papaparse');
 var headers = [];
 var unMarshalledArray = [];
 
-program.version('0.0.1').option('-t, --table [tablename]', 'Add the table you want to output to csv').option("-d, --describe").option("-r, --region [regionname]").parse(process.argv);
+var iterations = 0;
+
+program.version('0.0.1')
+.option('-t, --table [tablename]', 'Add the table you want to output to csv')
+.option("-d, --describe")
+.option('-c, --count [countToExport]')
+.option("-r, --region [regionname]").parse(process.argv);
+
+if (!program.count) {
+  console.log("You must specify the count (number of items to export)");
+  program.outputHelp();
+  process.exit(1);
+} else {
+	console.log(program.count);
+}
 
 if (!program.table) {
   console.log("You must specify a table");
   program.outputHelp();
   process.exit(1);
 }
+
 
 if (program.region && AWS.config.credentials) {
   AWS.config.update({region: program.region});
@@ -47,8 +62,11 @@ var scanDynamoDB = function ( query ) {
 
     if ( !err ) {
       unMarshalIntoArray( data.Items ); // Print out the subset of results.
-      if ( data.LastEvaluatedKey ) { // Result is incomplete; there is more to come.
+      if ( data.LastEvaluatedKey && iterations < program.count ) { // Result is incomplete; there is more to come.
+
         query.ExclusiveStartKey = data.LastEvaluatedKey;
+        iterations++;
+
         scanDynamoDB(query);
       }
       else {
@@ -61,8 +79,8 @@ var scanDynamoDB = function ( query ) {
         unMarshalledArray.unshift( dummyRow );
         console.log(Papa.unparse( unMarshalledArray ));
       }
-    } 
-    else 
+    }
+    else
       console.dir(err);
 
   });

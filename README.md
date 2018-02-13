@@ -34,7 +34,8 @@ Full syntax is:
     	-h, --help               output usage information
     	-V, --version            output the version number
     	-t, --table [tablename]  Add the table you want to output to csv
-    	-d, --describe           
+    	-c, --count				 Number of items to export
+    	-d, --describe
 
 
 Pre-requisites
