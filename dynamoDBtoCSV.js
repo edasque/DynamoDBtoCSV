@@ -52,19 +52,12 @@ var scanDynamoDB = function ( query ) {
         scanDynamoDB(query);
       }
       else {
-        let dummyRow = {};
-        headers.forEach( function ( key ) {
-          dummyRow[key] = 'dummy';
-        });
-
-        // console.log( JSON.stringify( dummyRow ) );
-        unMarshalledArray.unshift( dummyRow );
-        console.log(Papa.unparse( unMarshalledArray ));
+        console.log(Papa.unparse( { fields: [ ...headers ], data: unMarshalledArray } ));
       }
-    } 
-    else 
+    }
+    else {
       console.dir(err);
-
+    }
   });
 };
 
