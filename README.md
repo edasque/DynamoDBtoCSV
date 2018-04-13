@@ -34,7 +34,8 @@ Full syntax is:
     	-h, --help               output usage information
     	-V, --version            output the version number
     	-t, --table [tablename]  Add the table you want to output to csv
-    	-d, --describe           
+    	-e, --endpoint [url]     Endpoint URL, can be used to dump from local DynamoDB
+    	-d, --describe
 
 
 Pre-requisites
