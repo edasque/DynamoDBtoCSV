@@ -6,7 +6,13 @@ var Papa = require('papaparse');
 var headers = [];
 var unMarshalledArray = [];
 
-program.version('0.0.1').option('-t, --table [tablename]', 'Add the table you want to output to csv').option("-d, --describe").option("-r, --region [regionname]").parse(process.argv);
+program
+  .version('0.0.1')
+  .option('-t, --table [tablename]', 'Add the table you want to output to csv')
+  .option("-d, --describe")
+  .option("-r, --region [regionname]")
+  .option("-e, --endpoint [url]", 'Endpoint URL, can be used to dump from local DynamoDB')
+  .parse(process.argv);
 
 if (!program.table) {
   console.log("You must specify a table");
@@ -19,6 +25,11 @@ if (program.region && AWS.config.credentials) {
 } else {
   AWS.config.loadFromPath('./config.json');
 }
+
+if (program.endpoint) {
+  AWS.config.update({endpoint: program.endpoint})
+}
+
 var dynamoDB = new AWS.DynamoDB();
 
 var query = {
