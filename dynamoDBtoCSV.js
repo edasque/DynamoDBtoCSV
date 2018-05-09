@@ -12,6 +12,7 @@ program
   .option("-d, --describe")
   .option("-r, --region [regionname]")
   .option("-e, --endpoint [url]", 'Endpoint URL, can be used to dump from local DynamoDB')
+  .option("-p, --profile [profile]", 'Use profile from your credentials file')
   .parse(process.argv);
 
 if (!program.table) {
@@ -19,6 +20,7 @@ if (!program.table) {
   program.outputHelp();
   process.exit(1);
 }
+
 
 if (program.region && AWS.config.credentials) {
   AWS.config.update({region: program.region});
@@ -28,6 +30,12 @@ if (program.region && AWS.config.credentials) {
 
 if (program.endpoint) {
   AWS.config.update({endpoint: program.endpoint})
+}
+
+if (program.profile) {
+  var newCreds = AWS.config.credentials;
+  newCreds.profile = program.profile;
+  AWS.config.update({credentials: newCreds});
 }
 
 var dynamoDB = new AWS.DynamoDB();
