@@ -25,7 +25,7 @@ if (!program.table) {
 if (program.region && AWS.config.credentials) {
   AWS.config.update({region: program.region});
 } else {
-  AWS.config.loadFromPath('./config.json');
+  AWS.config.loadFromPath(__dirname + '/config.json');
 }
 
 if (program.endpoint) {
