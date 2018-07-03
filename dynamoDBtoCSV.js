@@ -5,6 +5,7 @@ var unmarshal = require('dynamodb-marshaler').unmarshal;
 var Papa = require('papaparse');
 var headers = [];
 var unMarshalledArray = [];
+var firstRun = true;
 
 program
   .version('0.0.1')
@@ -70,9 +71,6 @@ var scanDynamoDB = function ( query ) {
         query.ExclusiveStartKey = data.LastEvaluatedKey;
         scanDynamoDB(query);
       }
-      else {
-        console.log(Papa.unparse( { fields: [ ...headers ], data: unMarshalledArray } ));
-      }
     }
     else {
       console.dir(err);
@@ -107,6 +105,19 @@ function unMarshalIntoArray( items ) {
     unMarshalledArray.push( newRow );
 
   });
+
+  if (firstRun) {
+    headers.forEach( function (key, index) {
+      if (!unMarshalledArray[0].hasOwnProperty(key)) {
+        unMarshalledArray[0][key] = null;
+      }
+    });
+    console.log(Papa.unparse(unMarshalledArray));
+    firstRun = false;
+  } else {
+    console.log(Papa.unparse(unMarshalledArray, {header: false}));
+  }
+  unMarshalledArray = [];
 
 }
 
