@@ -41,12 +41,13 @@ Full syntax is:
 Pre-requisites
 --------------
 You'll need to install a few modules, including:
+
 * aws-sdk
 * commander
 * dynamodb-marshaler
 * papaparse
 
-	npm install
+npm install
 
 should do it.
 
