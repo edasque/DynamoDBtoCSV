@@ -3,6 +3,7 @@ var AWS = require('aws-sdk');
 var unmarshalItem = require('dynamodb-marshaler').unmarshalItem;
 var unmarshal = require('dynamodb-marshaler').unmarshal;
 var Papa = require('papaparse');
+var fs = require('fs');
 var headers = [];
 var unMarshalledArray = [];
 
@@ -13,6 +14,7 @@ program
   .option("-r, --region [regionname]")
   .option("-e, --endpoint [url]", 'Endpoint URL, can be used to dump from local DynamoDB')
   .option("-p, --profile [profile]", 'Use profile from your credentials file')
+  .option("-f, --file [file]", "Name of the file to be created")
   .parse(process.argv);
 
 if (!program.table) {
@@ -20,7 +22,6 @@ if (!program.table) {
   program.outputHelp();
   process.exit(1);
 }
-
 
 if (program.region && AWS.config.credentials) {
   AWS.config.update({region: program.region});
@@ -71,7 +72,12 @@ var scanDynamoDB = function ( query ) {
         scanDynamoDB(query);
       }
       else {
-        console.log(Papa.unparse( { fields: [ ...headers ], data: unMarshalledArray } ));
+		  let endData = Papa.unparse( { fields: [ ...headers ], data: unMarshalledArray } );
+		if(program.file){
+			writeData(endData)
+		}else{
+			console.log(endData);
+		}
       }
     }
     else {
@@ -79,6 +85,14 @@ var scanDynamoDB = function ( query ) {
     }
   });
 };
+
+var writeData = function(data)
+{
+	fs.writeFile(program.file, data, (err) => {
+		if(err) throw err;	
+		console.log('File Saved');
+	});
+}
 
 function unMarshalIntoArray( items ) {
   if ( items.length === 0 )
