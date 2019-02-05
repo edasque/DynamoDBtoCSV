@@ -16,6 +16,10 @@ typically, to use you'd run:
 
 	node dynamoDBtoCSV.js -t Hourly_ZEDO_Impressions_by_IP > output.csv
 
+or even:
+
+	node dynamoDBtoCSV.js -t Hourly_ZEDO_Impressions_by_IP -f output.csv
+
 to export to CSV
 
 Use *-d* to describe the table prior so you can have an idea of the number of rows you are going to export
@@ -35,6 +39,7 @@ Full syntax is:
     	-V, --version            output the version number
     	-t, --table [tablename]  Add the table you want to output to csv
     	-e, --endpoint [url]     Endpoint URL, can be used to dump from local DynamoDB
+		-f, --file               Name of the file to be created
     	-d, --describe
 
 
