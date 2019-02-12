@@ -1,5 +1,3 @@
 {
-    "accessKeyId": "REPLACE",
-    "secretAccessKey": "REPLACE",
-    "region": "REPLACE"
+    "region": "sa-east-1"
 }

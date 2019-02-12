@@ -50,7 +50,8 @@ const dynamoDB = new AWS.DynamoDB();
 
 const query = {
 	"TableName": program.table,
-	"Limit": 1000
+	"FilterExpression": "attribute_exists(acertou)",
+	"Limit": 500
 };
 
 const describeTable = async function()
@@ -75,8 +76,10 @@ const scanDynamoDB = async function(query)
 		unMarshalIntoArray(data.Items); // Print out the subset of results.
 		if (data.LastEvaluatedKey)
 		{ // Result is incomplete; there is more to come.
+			console.warn('Buscando mais dados')
+			console.warn(data.LastEvaluatedKey)
 			query.ExclusiveStartKey = data.LastEvaluatedKey;
-			scanDynamoDB(query);
+			setTimeout( () => scanDynamoDB(query), 2000);
 			return;
 		}
 		let endData = Papa.unparse({fields: [...headers], data: unMarshalledArray});
