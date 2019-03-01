@@ -18,7 +18,7 @@ program
   )
   .option("-p, --profile [profile]", "Use profile from your credentials file")
   .option("-f, --file [file]", "Name of the file to be created")
-  .oprtion(
+  .option(
     "-ec --envcreds",
     "Load AWS Credentials using AWS Credential Provider Chain"
   )
