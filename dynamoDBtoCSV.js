@@ -1,20 +1,27 @@
-var program = require('commander');
-var AWS = require('aws-sdk');
-var unmarshalItem = require('dynamodb-marshaler').unmarshalItem;
-var unmarshal = require('dynamodb-marshaler').unmarshal;
-var Papa = require('papaparse');
-var fs = require('fs');
+var program = require("commander");
+var AWS = require("aws-sdk");
+var unmarshalItem = require("dynamodb-marshaler").unmarshalItem;
+var unmarshal = require("dynamodb-marshaler").unmarshal;
+var Papa = require("papaparse");
+var fs = require("fs");
 var headers = [];
 var unMarshalledArray = [];
 
 program
-  .version('0.0.1')
-  .option('-t, --table [tablename]', 'Add the table you want to output to csv')
+  .version("0.0.1")
+  .option("-t, --table [tablename]", "Add the table you want to output to csv")
   .option("-d, --describe")
   .option("-r, --region [regionname]")
-  .option("-e, --endpoint [url]", 'Endpoint URL, can be used to dump from local DynamoDB')
-  .option("-p, --profile [profile]", 'Use profile from your credentials file')
+  .option(
+    "-e, --endpoint [url]",
+    "Endpoint URL, can be used to dump from local DynamoDB"
+  )
+  .option("-p, --profile [profile]", "Use profile from your credentials file")
   .option("-f, --file [file]", "Name of the file to be created")
+  .option(
+    "-ec --envcreds",
+    "Load AWS Credentials using AWS Credential Provider Chain"
+  )
   .parse(process.argv);
 
 if (!program.table) {
@@ -24,106 +31,110 @@ if (!program.table) {
 }
 
 if (program.region && AWS.config.credentials) {
-  AWS.config.update({region: program.region});
+  AWS.config.update({ region: program.region });
 } else {
-  AWS.config.loadFromPath(__dirname + '/config.json');
+  AWS.config.loadFromPath(__dirname + "/config.json");
 }
 
 if (program.endpoint) {
-  AWS.config.update({endpoint: program.endpoint})
+  AWS.config.update({ endpoint: program.endpoint });
 }
 
 if (program.profile) {
   var newCreds = AWS.config.credentials;
   newCreds.profile = program.profile;
-  AWS.config.update({credentials: newCreds});
+  AWS.config.update({ credentials: newCreds });
+}
+
+if (program.envcreds) {
+  var newCreds = AWS.config.credentials;
+  newCreds.profile = program.profile;
+  AWS.config.update({
+    credentials: {
+      accessKeyId: process.env.AWS_ACCESS_KEY_ID,
+      secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY
+    },
+    region: process.env.AWS_DEFAULT_REGION
+  });
 }
 
 var dynamoDB = new AWS.DynamoDB();
 
 var query = {
-  "TableName": program.table,
-  "Limit": 1000
+  TableName: program.table,
+  Limit: 1000
 };
 
 var describeTable = function(query) {
+  dynamoDB.describeTable(
+    {
+      TableName: program.table
+    },
+    function(err, data) {
+      if (!err) {
+        console.dir(data.Table);
+      } else console.dir(err);
+    }
+  );
+};
 
-  dynamoDB.describeTable({
-    "TableName": program.table
-  }, function(err, data) {
-
+var scanDynamoDB = function(query) {
+  dynamoDB.scan(query, function(err, data) {
     if (!err) {
-
-      console.dir(data.Table);
-
-    } else console.dir(err);
-  });
-}
-
-
-var scanDynamoDB = function ( query ) {
-
-  dynamoDB.scan( query, function ( err, data ) {
-
-    if ( !err ) {
-      unMarshalIntoArray( data.Items ); // Print out the subset of results.
-      if ( data.LastEvaluatedKey ) { // Result is incomplete; there is more to come.
+      unMarshalIntoArray(data.Items); // Print out the subset of results.
+      if (data.LastEvaluatedKey) {
+        // Result is incomplete; there is more to come.
         query.ExclusiveStartKey = data.LastEvaluatedKey;
         scanDynamoDB(query);
+      } else {
+        let endData = Papa.unparse({
+          fields: [...headers],
+          data: unMarshalledArray
+        });
+        if (program.file) {
+          writeData(endData);
+        } else {
+          console.log(endData);
+        }
       }
-      else {
-		  let endData = Papa.unparse( { fields: [ ...headers ], data: unMarshalledArray } );
-		if(program.file){
-			writeData(endData)
-		}else{
-			console.log(endData);
-		}
-      }
-    }
-    else {
+    } else {
       console.dir(err);
     }
   });
 };
 
-var writeData = function(data)
-{
-	fs.writeFile(program.file, data, (err) => {
-		if(err) throw err;	
-		console.log('File Saved');
-	});
-}
+var writeData = function(data) {
+  fs.writeFile(program.file, data, err => {
+    if (err) throw err;
+    console.log("File Saved");
+  });
+};
 
-function unMarshalIntoArray( items ) {
-  if ( items.length === 0 )
-    return;
+function unMarshalIntoArray(items) {
+  if (items.length === 0) return;
 
-  items.forEach( function ( row ) {
+  items.forEach(function(row) {
     let newRow = {};
 
     // console.log( 'Row: ' + JSON.stringify( row ));
-    Object.keys( row ).forEach( function ( key ) {
-      if ( headers.indexOf( key.trim() ) === -1 ) {
+    Object.keys(row).forEach(function(key) {
+      if (headers.indexOf(key.trim()) === -1) {
         // console.log( 'putting new key ' + key.trim() + ' into headers ' + headers.toString());
-        headers.push( key.trim() );
+        headers.push(key.trim());
       }
-      let newValue = unmarshal( row[key] );
+      let newValue = unmarshal(row[key]);
 
-      if ( typeof newValue === 'object' ) {
-        newRow[key] = JSON.stringify( newValue );
-      }
-      else {
+      if (typeof newValue === "object") {
+        newRow[key] = JSON.stringify(newValue);
+      } else {
         newRow[key] = newValue;
       }
     });
 
     // console.log( newRow );
-    unMarshalledArray.push( newRow );
-
+    unMarshalledArray.push(newRow);
   });
-
 }
 
-if ( program.describe ) describeTable( query );
-else scanDynamoDB( query );
-
+if (program.describe) describeTable(query);
+else scanDynamoDB(query);
