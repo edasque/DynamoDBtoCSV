@@ -41,7 +41,7 @@ if (program.endpoint) {
 }
 
 if (program.profile) {
-  var newCreds = AWS.config.credentials;
+  var newCreds = new AWS.SharedIniFileCredentials({ profile: program.profile });
   newCreds.profile = program.profile;
   AWS.config.update({ credentials: newCreds });
 }
