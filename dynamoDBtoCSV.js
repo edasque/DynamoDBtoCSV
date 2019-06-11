@@ -22,6 +22,7 @@ program
     "-ec --envcreds",
     "Load AWS Credentials using AWS Credential Provider Chain"
   )
+  .option("-s, --size [size]", "Number of lines to read before writing.", 5000)
   .parse(process.argv);
 
 if (!program.table) {
@@ -66,15 +67,12 @@ var query = {
 };
 
 // if there is a target file, open a write stream
-if (program.file) {
+if (!program.describe && program.file) {
   var stream = fs.createWriteStream(program.file, { flags: 'a' });
 }
 var rowCount = 0;
 var writeCount = 0;
-var writeChunk = 5000;
-if (program.writechunk) {
-  writeChunk = writechunk;
-}
+writeChunk = program.size;
 
 var describeTable = function (query) {
   dynamoDB.describeTable(
