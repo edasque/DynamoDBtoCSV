@@ -68,7 +68,6 @@ if (program.mfa && program.profile) {
 
   // Update config to include MFA
   AWS.config.update({ credentials: creds });
-  setRole();
 } else if(program.mfa && !program.profile) {
   console.log('error: MFA requires a profile(-p [profile]) to work');
   process.exit(1);
