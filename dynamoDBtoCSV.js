@@ -23,6 +23,7 @@ program
     "Endpoint URL, can be used to dump from local DynamoDB"
   )
   .option("-p, --profile [profile]", "Use profile from your credentials file")
+  .option("-m, --mfa [mfacode]", "Add an MFA code to access profiles that require mfa.")
   .option("-f, --file [file]", "Name of the file to be created")
   .option(
     "-ec --envcreds",
@@ -63,6 +64,19 @@ if (program.envcreds) {
     },
     region: process.env.AWS_DEFAULT_REGION
   });
+}
+
+if (program.mfa && program.profile) {
+  const creds = new AWS.SharedIniFileCredentials({
+    tokenCodeFn: (serial, cb) => {cb(null, program.mfa)},
+    profile: program.profile
+  });
+
+  // Update config to include MFA
+  AWS.config.update({ credentials: creds });
+} else if (program.mfa && !program.profile) {
+  console.log('error: MFA requires a profile(-p [profile]) to work');
+  process.exit(1);
 }
 
 const dynamoDB = new AWS.DynamoDB();

@@ -33,9 +33,9 @@ Full syntax is:
 
     Options:
 
-    	-h, --help                            output usage information
-    	-V, --version                         output the version number
-    	-t, --table [tablename]               Add the table you want to output to csv
+      -h, --help                            output usage information
+      -V, --version                         output the version number
+      -t, --table [tablename]               Add the table you want to output to csv
       -i, --index [indexname]               Add the index you want to output to csv
       -k, --keyExpression [keyExpression]   The name of the partition key to filter results on
       -v, --KeyExpressionValues [value]     The expression for filtering on the primary key
@@ -43,11 +43,11 @@ Full syntax is:
       -c, --count                           Only get count, requires -pk flag
       -a, --stats [fieldname]               Gets the count of all occurances by a specific field name 
                                             (only string fields are supported presently)
-    	-e, --endpoint [url]                  Endpoint URL, can be used to dump from local DynamoDB
-    	-f, --file [file]                     Name of the file to be created
-    	-d, --describe
-    	-p, --profile [profile]  Use profile from your credentials file
-    	-ec --envcreds           Load AWS Credentials using AWS Credential Provider Chain
+      -e, --endpoint [url]                  Endpoint URL, can be used to dump from local DynamoDB
+      -f, --file [file]                     Name of the file to be created
+      -d, --describe                        Describe the table
+      -p, --profile [profile]               Use profile from your credentials file
+      -ec --envcreds                        Load AWS Credentials using AWS Credential Provider Chain
 
 ## Pre-requisites
 
