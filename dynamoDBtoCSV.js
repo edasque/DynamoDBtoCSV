@@ -1,16 +1,22 @@
-var program = require("commander");
-var AWS = require("aws-sdk");
-var unmarshalItem = require("dynamodb-marshaler").unmarshalItem;
-var unmarshal = require("dynamodb-marshaler").unmarshal;
-var Papa = require("papaparse");
-var fs = require("fs");
-var headers = [];
-var unMarshalledArray = [];
+const program = require("commander");
+const AWS = require("aws-sdk");
+const unmarshal = require("dynamodb-marshaler").unmarshal;
+const Papa = require("papaparse");
+const fs = require("fs");
+
+let headers = [];
+let unMarshalledArray = [];
 
 program
-  .version("0.0.1")
+  .version("0.1.1")
   .option("-t, --table [tablename]", "Add the table you want to output to csv")
-  .option("-d, --describe")
+  .option("-i, --index [indexname]", "Add the index you want to output to csv")
+  .option("-k, --keyExpression [keyExpression]", "The name of the partition key to filter results on")
+  .option("-v, --keyExpressionValues [keyExpressionValues]", "The key value expression for keyExpression. See: https://docs.aws.amazon.com/amazondynamodb/latest/APIReference/API_Query.html")
+  .option("-c, --count", "Only get count, requires -k flag")
+  .option("-a, --stats [fieldname]", "Gets the count of all occurances by a specific field name (only string fields are supported")
+  .option("-d, --describe", "Describe the table")
+  .option("-S, --select [select]", "Select specific fields")
   .option("-r, --region [regionname]")
   .option(
     "-e, --endpoint [url]",
@@ -42,13 +48,13 @@ if (program.endpoint) {
 }
 
 if (program.profile) {
-  var newCreds = new AWS.SharedIniFileCredentials({ profile: program.profile });
+  let newCreds = new AWS.SharedIniFileCredentials({ profile: program.profile });
   newCreds.profile = program.profile;
   AWS.config.update({ credentials: newCreds });
 }
 
 if (program.envcreds) {
-  var newCreds = AWS.config.credentials;
+  let newCreds = AWS.config.credentials;
   newCreds.profile = program.profile;
   AWS.config.update({
     credentials: {
@@ -59,10 +65,21 @@ if (program.envcreds) {
   });
 }
 
-var dynamoDB = new AWS.DynamoDB();
+const dynamoDB = new AWS.DynamoDB();
 
-var query = {
+const query = {
   TableName: program.table,
+  IndexName: program.index,
+  Select: program.count ? "COUNT" : (program.select ? "SPECIFIC_ATTRIBUTES" : (program.index ? "ALL_PROJECTED_ATTRIBUTES" : "ALL_ATTRIBUTES")),
+  KeyConditionExpression: program.keyExpression,
+  ExpressionAttributeValues: JSON.parse(program.keyExpressionValues),
+  ProjectionExpression: program.select,
+  Limit: 1000
+};
+
+const scanQuery = {
+  TableName: program.table,
+  IndexName: program.index,
   Limit: 1000
 };
 
@@ -70,11 +87,11 @@ var query = {
 if (!program.describe && program.file) {
   var stream = fs.createWriteStream(program.file, { flags: 'a' });
 }
-var rowCount = 0;
-var writeCount = 0;
-writeChunk = program.size;
+let rowCount = 0;
+let writeCount = 0;
+let writeChunk = program.size;
 
-var describeTable = function (query) {
+const describeTable = () => {
   dynamoDB.describeTable(
     {
       TableName: program.table
@@ -87,7 +104,7 @@ var describeTable = function (query) {
   );
 };
 
-var scanDynamoDB = function (query) {
+ const scanDynamoDB = (query) => {
   dynamoDB.scan(query, function (err, data) {
     if (!err) {
       unMarshalIntoArray(data.Items); // Print out the subset of results.
@@ -108,7 +125,78 @@ var scanDynamoDB = function (query) {
   });
 };
 
-var unparseData = function (lastEvaluatedKey) {
+const appendStats = (params, items) => {
+  for (let i = 0; i < items.length; i++) {
+    let item = items[i];
+    let key = item[program.stats].S;
+  
+    if (params.stats[key]) {
+      params.stats[key]++;
+    } else {
+      params.stats[key] = 1;
+    }
+
+    rowCount++;
+  }
+}
+
+const printStats = (stats) => {
+  if (stats) {
+    console.log("\nSTATS\n----------");
+    Object.keys(stats).forEach((key) => {
+      console.log(key + " = " + stats[key]);
+    });
+    writeCount += rowCount;
+    rowCount = 0;
+  }
+}
+
+const processStats = (params, data) => {
+  let query = params.query;
+  appendStats(params, data.Items);
+  if (data.LastEvaluatedKey) {
+    // Result is incomplete; there is more to come.
+    query.ExclusiveStartKey = data.LastEvaluatedKey;
+    if (rowCount >= writeChunk) {
+      // once the designated number of items has been read, print the final count.
+      printStats(params.stats);
+    }
+    queryDynamoDB(params);
+  } 
+};
+
+const processRows = (params, data) => {
+  let query = params.query;
+  unMarshalIntoArray(data.Items); // Print out the subset of results.
+  if (data.LastEvaluatedKey) {
+    // Result is incomplete; there is more to come.
+    query.ExclusiveStartKey = data.LastEvaluatedKey;
+    if (rowCount >= writeChunk) {
+      // once the designated number of items has been read, write out to stream.
+      unparseData(data.LastEvaluatedKey);
+    }
+    queryDynamoDB(params);
+  } else {
+    unparseData("File Written");
+  }
+};
+
+const queryDynamoDB = (params) => {
+  let query = params.query;
+  dynamoDB.query(query, function (err, data) {
+    if (!err) {
+      if (program.stats) {
+        processStats(params, data);
+      } else {
+        processRows(params, data);
+      }
+    } else {
+      console.dir(err);
+    }
+  });
+};
+
+const unparseData = (lastEvaluatedKey) => {
   var endData = Papa.unparse({
     fields: [...headers],
     data: unMarshalledArray
@@ -123,6 +211,7 @@ var unparseData = function (lastEvaluatedKey) {
     console.log(endData);
   }
   // Print last evaluated key so process can be continued after stop.
+  console.log("last key:");
   console.log(lastEvaluatedKey);
 
   // reset write array. saves memory
@@ -131,11 +220,11 @@ var unparseData = function (lastEvaluatedKey) {
   rowCount = 0;
 }
 
-var writeData = function (data) {
+const writeData = (data) => {
   stream.write(data);
 };
 
-function unMarshalIntoArray(items) {
+const unMarshalIntoArray = (items) => {
   if (items.length === 0) return;
 
   items.forEach(function (row) {
@@ -162,5 +251,6 @@ function unMarshalIntoArray(items) {
   });
 }
 
-if (program.describe) describeTable(query);
-else scanDynamoDB(query);
+if (program.describe) describeTable(scanQuery);
+if (program.keyExpression) queryDynamoDB({ "query": query, stats: {} });
+else scanDynamoDB(scanQuery);

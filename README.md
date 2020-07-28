@@ -33,11 +33,18 @@ Full syntax is:
 
     Options:
 
-    	-h, --help               output usage information
-    	-V, --version            output the version number
-    	-t, --table [tablename]  Add the table you want to output to csv
-    	-e, --endpoint [url]     Endpoint URL, can be used to dump from local DynamoDB
-    	-f, --file [file]        Name of the file to be created
+    	-h, --help                            output usage information
+    	-V, --version                         output the version number
+    	-t, --table [tablename]               Add the table you want to output to csv
+      -i, --index [indexname]               Add the index you want to output to csv
+      -k, --keyExpression [keyExpression]   The name of the partition key to filter results on
+      -v, --KeyExpressionValues [value]     The expression for filtering on the primary key
+      -S, --select [list of fields]         The list of fields to select on
+      -c, --count                           Only get count, requires -pk flag
+      -a, --stats [fieldname]               Gets the count of all occurances by a specific field name 
+                                            (only string fields are supported presently)
+    	-e, --endpoint [url]                  Endpoint URL, can be used to dump from local DynamoDB
+    	-f, --file [file]                     Name of the file to be created
     	-d, --describe
     	-p, --profile [profile]  Use profile from your credentials file
     	-ec --envcreds           Load AWS Credentials using AWS Credential Provider Chain
@@ -60,3 +67,15 @@ should do it.
     "HashOf10","DateIPAdID","adcount"
     "37693cfc748049e45d87b8c7d8b9aacd","2013011720024058205168000000010002","1"
     "37693cfc748049e45d87b8c7d8b9aacd","2013011720050084232194000000010002","1"
+
+## Advanced queries
+
+Output a selection of columns
+```
+node dynamoDBtoCSV.js -t my-table -i rule_type_id_index -k "rule_type_id = :v1" -v "{\":v1\": {\"S\": \"my_primary_key_valye\"}}" -s "rule_type_id, created_by" -r us-west-2
+```
+
+Output stats
+```
+node dynamoDBtoCSV.js -t my-table -i rule_type_id_index -k "rule_type_id = :v1" -v "{\":v1\": {\"S\": \"my_primary_key_valye\"}}" -s "rule_type_id, created_by" -r us-west-2 -a created_by
+```
