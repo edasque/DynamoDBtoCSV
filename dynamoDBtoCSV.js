@@ -3,7 +3,6 @@ const AWS = require("aws-sdk");
 const unmarshal = require("dynamodb-marshaler").unmarshal;
 const Papa = require("papaparse");
 const fs = require("fs");
-const { stringify } = require("querystring");
 
 let headers = [];
 let unMarshalledArray = [];
