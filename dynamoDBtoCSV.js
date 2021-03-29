@@ -36,7 +36,7 @@ program
 
 if (!options.table) {
   console.log("You must specify a table");
-  options.outputHelp();
+  program.outputHelp();
   process.exit(1);
 }
 
