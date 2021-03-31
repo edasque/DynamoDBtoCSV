@@ -96,6 +96,7 @@ const query = {
 const scanQuery = {
   TableName: options.table,
   IndexName: options.index,
+  ProjectionExpression: options.select,
   Limit: 1000
 };
 
