@@ -85,8 +85,8 @@ const query = {
   TableName: program.table,
   IndexName: program.index,
   Select: program.count ? "COUNT" : (program.select ? "SPECIFIC_ATTRIBUTES" : (program.index ? "ALL_PROJECTED_ATTRIBUTES" : "ALL_ATTRIBUTES")),
-  KeyConditionExpression: program.keyExpression,
-  ExpressionAttributeValues: JSON.parse(program.keyExpressionValues),
+  KeyConditionExpression: program.keyExpression || null,
+  ExpressionAttributeValues: program.keyExpressionValues? JSON.parse(program.keyExpressionValues): null,
   ProjectionExpression: program.select,
   Limit: 1000
 };
