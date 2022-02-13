@@ -32,31 +32,33 @@ program
   .option("-s, --size [size]", "Number of lines to read before writing.", 5000)
   .parse(process.argv);
 
-if (!program.table) {
+  const options = program.opts();
+
+if (!options.table) {
   console.log("You must specify a table");
   program.outputHelp();
   process.exit(1);
 }
 
-if (program.region && AWS.config.credentials) {
-  AWS.config.update({ region: program.region });
+if (options.region && AWS.config.credentials) {
+  AWS.config.update({ region: options.region });
 } else {
   AWS.config.loadFromPath(__dirname + "/config.json");
 }
 
-if (program.endpoint) {
-  AWS.config.update({ endpoint: program.endpoint });
+if (options.endpoint) {
+  AWS.config.update({ endpoint: options.endpoint });
 }
 
-if (program.profile) {
-  let newCreds = new AWS.SharedIniFileCredentials({ profile: program.profile });
-  newCreds.profile = program.profile;
+if (options.profile) {
+  let newCreds = new AWS.SharedIniFileCredentials({ profile: options.profile });
+  newCreds.profile = options.profile;
   AWS.config.update({ credentials: newCreds });
 }
 
-if (program.envcreds) {
+if (options.envcreds) {
   let newCreds = AWS.config.credentials;
-  newCreds.profile = program.profile;
+  newCreds.profile = options.profile;
   AWS.config.update({
     credentials: {
       accessKeyId: process.env.AWS_ACCESS_KEY_ID,
@@ -66,15 +68,15 @@ if (program.envcreds) {
   });
 }
 
-if (program.mfa && program.profile) {
+if (options.mfa && options.profile) {
   const creds = new AWS.SharedIniFileCredentials({
-    tokenCodeFn: (serial, cb) => {cb(null, program.mfa)},
-    profile: program.profile
+    tokenCodeFn: (serial, cb) => {cb(null, options.mfa)},
+    profile: options.profile
   });
 
   // Update config to include MFA
   AWS.config.update({ credentials: creds });
-} else if (program.mfa && !program.profile) {
+} else if (options.mfa && !options.profile) {
   console.log('error: MFA requires a profile(-p [profile]) to work');
   process.exit(1);
 }
@@ -82,33 +84,34 @@ if (program.mfa && program.profile) {
 const dynamoDB = new AWS.DynamoDB();
 
 const query = {
-  TableName: program.table,
-  IndexName: program.index,
-  Select: program.count ? "COUNT" : (program.select ? "SPECIFIC_ATTRIBUTES" : (program.index ? "ALL_PROJECTED_ATTRIBUTES" : "ALL_ATTRIBUTES")),
-  KeyConditionExpression: program.keyExpression,
-  ExpressionAttributeValues: JSON.parse(program.keyExpressionValues),
-  ProjectionExpression: program.select,
+  TableName: options.table,
+  IndexName: options.index,
+  Select: options.count ? "COUNT" : (options.select ? "SPECIFIC_ATTRIBUTES" : (options.index ? "ALL_PROJECTED_ATTRIBUTES" : "ALL_ATTRIBUTES")),
+  KeyConditionExpression: options.keyExpression,
+  ExpressionAttributeValues: JSON.parse(options.keyExpressionValues),
+  ProjectionExpression: options.select,
   Limit: 1000
 };
 
 const scanQuery = {
-  TableName: program.table,
-  IndexName: program.index,
+  TableName: options.table,
+  IndexName: options.index,
+  ProjectionExpression: options.select,
   Limit: 1000
 };
 
 // if there is a target file, open a write stream
-if (!program.describe && program.file) {
-  var stream = fs.createWriteStream(program.file, { flags: 'a' });
+if (!options.describe && options.file) {
+  var stream = fs.createWriteStream(options.file, { flags: 'a' });
 }
 let rowCount = 0;
 let writeCount = 0;
-let writeChunk = program.size;
+let writeChunk = options.size;
 
 const describeTable = () => {
   dynamoDB.describeTable(
     {
-      TableName: program.table
+      TableName: options.table
     },
     function (err, data) {
       if (!err) {
@@ -142,7 +145,7 @@ const describeTable = () => {
 const appendStats = (params, items) => {
   for (let i = 0; i < items.length; i++) {
     let item = items[i];
-    let key = item[program.stats].S;
+    let key = item[options.stats].S;
   
     if (params.stats[key]) {
       params.stats[key]++;
@@ -199,7 +202,7 @@ const queryDynamoDB = (params) => {
   let query = params.query;
   dynamoDB.query(query, function (err, data) {
     if (!err) {
-      if (program.stats) {
+      if (options.stats) {
         processStats(params, data);
       } else {
         processRows(params, data);
@@ -219,7 +222,7 @@ const unparseData = (lastEvaluatedKey) => {
     // remove column names after first write chunk.
     endData = endData.replace(/(.*\r\n)/, "");;
   }
-  if (program.file) {
+  if (options.file) {
     writeData(endData);
   } else {
     console.log(endData);
@@ -265,6 +268,7 @@ const unMarshalIntoArray = (items) => {
   });
 }
 
-if (program.describe) describeTable(scanQuery);
-if (program.keyExpression) queryDynamoDB({ "query": query, stats: {} });
+if (options.describe) describeTable(scanQuery);
+if (options.keyExpression) queryDynamoDB({ "query": query, stats: {} });
 else scanDynamoDB(scanQuery);
+
