@@ -95,7 +95,7 @@ const query = {
   IndexName: options.index,
   Select: options.count ? "COUNT" : (options.select ? "SPECIFIC_ATTRIBUTES" : (options.index ? "ALL_PROJECTED_ATTRIBUTES" : "ALL_ATTRIBUTES")),
   KeyConditionExpression: options.keyExpression,
-  ExpressionAttributeValues: JSON.parse(options.keyExpressionValues),
+  ExpressionAttributeValues: options.keyExpressionValues && JSON.parse(options.keyExpressionValues),
   ProjectionExpression,
   ExpressionAttributeNames,
   Limit: 1000
