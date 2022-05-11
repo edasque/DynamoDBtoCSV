@@ -83,20 +83,29 @@ if (options.mfa && options.profile) {
 
 const dynamoDB = new AWS.DynamoDB();
 
+// Map attribute name selections to indexed aliases - to allow querying on fields that happen to have the same name as a reserved word.
+const attributeIndexSelectionPairs = options.select?.split(',')?.map((attr, index) => [`#${index}`, attr.trim()]);
+const selectionsByAttributeNames = attributeIndexSelectionPairs ? Object.fromEntries(attributeIndexSelectionPairs) : undefined;
+
+const ProjectionExpression = selectionsByAttributeNames ? Object.keys(selectionsByAttributeNames).join(",") : undefined;
+const ExpressionAttributeNames = selectionsByAttributeNames;
+
 const query = {
   TableName: options.table,
   IndexName: options.index,
   Select: options.count ? "COUNT" : (options.select ? "SPECIFIC_ATTRIBUTES" : (options.index ? "ALL_PROJECTED_ATTRIBUTES" : "ALL_ATTRIBUTES")),
   KeyConditionExpression: options.keyExpression,
   ExpressionAttributeValues: JSON.parse(options.keyExpressionValues),
-  ProjectionExpression: options.select,
+  ProjectionExpression,
+  ExpressionAttributeNames,
   Limit: 1000
 };
 
 const scanQuery = {
   TableName: options.table,
   IndexName: options.index,
-  ProjectionExpression: options.select,
+  ProjectionExpression,
+  ExpressionAttributeNames,
   Limit: 1000
 };
 
