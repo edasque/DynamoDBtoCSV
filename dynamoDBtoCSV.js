@@ -35,8 +35,8 @@ program
   const options = program.opts();
 
 if (!options.table) {
-  console.log("You must specify a table");
-  program.outputHelp();
+  console.error("You must specify a table");
+  program.outputHelp({ error: true });
   process.exit(1);
 }
 
@@ -77,26 +77,35 @@ if (options.mfa && options.profile) {
   // Update config to include MFA
   AWS.config.update({ credentials: creds });
 } else if (options.mfa && !options.profile) {
-  console.log('error: MFA requires a profile(-p [profile]) to work');
+  console.error('error: MFA requires a profile(-p [profile]) to work');
   process.exit(1);
 }
 
 const dynamoDB = new AWS.DynamoDB();
+
+// Map attribute name selections to indexed aliases - to allow querying on fields that happen to have the same name as a reserved word.
+const attributeIndexSelectionPairs = options.select?.split(',')?.map((attr, index) => [`#${index}`, attr.trim()]);
+const selectionsByAttributeNames = attributeIndexSelectionPairs ? Object.fromEntries(attributeIndexSelectionPairs) : undefined;
+
+const ProjectionExpression = selectionsByAttributeNames ? Object.keys(selectionsByAttributeNames).join(",") : undefined;
+const ExpressionAttributeNames = selectionsByAttributeNames;
 
 const query = {
   TableName: options.table,
   IndexName: options.index,
   Select: options.count ? "COUNT" : (options.select ? "SPECIFIC_ATTRIBUTES" : (options.index ? "ALL_PROJECTED_ATTRIBUTES" : "ALL_ATTRIBUTES")),
   KeyConditionExpression: options.keyExpression,
-  ExpressionAttributeValues: JSON.parse(options.keyExpressionValues),
-  ProjectionExpression: options.select,
+  ExpressionAttributeValues: options.keyExpressionValues && JSON.parse(options.keyExpressionValues),
+  ProjectionExpression,
+  ExpressionAttributeNames,
   Limit: 1000
 };
 
 const scanQuery = {
   TableName: options.table,
   IndexName: options.index,
-  ProjectionExpression: options.select,
+  ProjectionExpression,
+  ExpressionAttributeNames,
   Limit: 1000
 };
 
@@ -159,9 +168,9 @@ const appendStats = (params, items) => {
 
 const printStats = (stats) => {
   if (stats) {
-    console.log("\nSTATS\n----------");
+    console.error("\nSTATS\n----------");
     Object.keys(stats).forEach((key) => {
-      console.log(key + " = " + stats[key]);
+      console.error(key + " = " + stats[key]);
     });
     writeCount += rowCount;
     rowCount = 0;
@@ -228,8 +237,8 @@ const unparseData = (lastEvaluatedKey) => {
     console.log(endData);
   }
   // Print last evaluated key so process can be continued after stop.
-  console.log("last key:");
-  console.log(lastEvaluatedKey);
+  console.error("last key:");
+  console.error(lastEvaluatedKey);
 
   // reset write array. saves memory
   unMarshalledArray = [];
